@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillBot - Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        /* --- Sidebar & Layout Styles from Overview Page --- */
+        body { font-family: 'Inter', sans-serif; background-color: #F7FAFC; }
+        .sidebar { width: 256px; }
+        .main-content { margin-left: 256px; min-height: 100vh; padding: 2rem; }
+        .nav-active-link { background-color: #4a5568; font-weight: 700; border-right: 4px solid #38A169; color: white; }
+        
+        /* --- Component Styles --- */
+        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); }
+        .brand-green { color: #38A169; }
+        .brand-bg { background-color: #38A169; }
+        .brand-hover:hover { background-color: #2f855a; /* Slightly darker green */ }
+
+        /* Form Focus Ring matching brand color */
+        .focus-ring-green:focus {
+            --tw-ring-color: #38A169 !important;
+            border-color: #38A169 !important;
+        }
+        .bg-brand-light-green {
+             background-color: rgba(56, 161, 105, 0.1); 
+        }
+
+        /* Status Message Styling */
+        .status-message {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            display: none; 
+        }
+        .status-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar fixed top-0 left-0 h-full bg-gray-800 text-white p-6 flex flex-col justify-between z-20 shadow-xl">
+        <div>
+            <div class="text-3xl font-extrabold text-[#38A169] mb-10 tracking-wider">BILLBOT</div>
+            <nav class="space-y-4">
+                <a href="overview.html" class="flex items-center p-3 rounded-lg text-lg hover:bg-gray-700 transition duration-150">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m0 0v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Overview
+                </a>
+                <a href="bills.html" class="flex items-center p-3 rounded-lg text-lg hover:bg-gray-700 transition duration-150">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Bills
+                </a>
+                <a href="profile.html" class="flex items-center p-3 rounded-lg text-lg nav-active-link">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Profile
+                </a>
+                <a href="settings.html" class="flex items-center p-3 rounded-lg text-lg hover:bg-gray-700 transition duration-150">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.525.323 1.065.525 1.066-2.572z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Settings
+                </a>
+            </nav>
+        </div>
+        <div class="mt-8">
+            <a href="auth_ui.html" class="flex items-center p-3 rounded-lg text-lg text-red-400 hover:bg-gray-700 transition duration-150">
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        
+        <header class="flex justify-between items-center mb-8 pb-4 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+        </header>
+
+        <div id="statusMessage" class="status-message" role="alert"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 space-y-6">
+                <div class="card p-6 flex flex-col items-center">
+                    <img src="https://via.placeholder.com/150" alt="User Avatar" class="w-32 h-32 rounded-full mb-4 border-4 border-[#38A169] object-cover">
+                    <h2 class="text-2xl font-bold text-gray-900" id="profileName">User Name</h2>
+                    <p class="text-gray-500 mb-6" id="profileEmail">user@example.com</p>
+                    <button id="changePhotoBtn" class="px-6 py-2 brand-bg text-white font-medium rounded-lg brand-hover transition duration-150">
+                        Change Photo
+                    </button>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Account Status</h3>
+                    <div class="flex items-center justify-between p-3 bg-brand-light-green rounded-lg">
+                        <span class="brand-green font-medium">Verified Account</span>
+                        <svg class="w-6 h-6 brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">Last login: <span id="lastLogin">Today, 10:45 AM</span></p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="card p-8">
+                    <h3 class="text-xl font-extrabold text-gray-800 mb-6 border-b pb-3">Personal Information</h3>
+                    <form id="profileForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <input type="text" id="first_name" name="first_name" value="User" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-ring-green" required>
+                            </div>
+                            <div>
+                                <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <input type="text" id="last_name" name="last_name" value="Name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-ring-green" required>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input type="email" id="email" name="email" value="user@example.com" disabled class="w-full p-3 border border-gray-200 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed">
+                        </div>
+
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" value="+91 98765 43210" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-ring-green">
+                        </div>
+
+                        <div>
+                            <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                            <select id="country" name="country" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-ring-green bg-white">
+                                <option value="">Loading Countries...</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" id="saveChangesBtn" class="px-8 py-3 brand-bg text-white font-semibold rounded-lg brand-hover transition duration-150 shadow-md">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card p-8">
+                    <h3 class="text-xl font-extrabold text-gray-800 mb-6 border-b pb-3">Security & Actions</h3>
+                    
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg mb-4">
+                        <div>
+                            <p class="font-medium text-gray-800">Change Password</p>
+                            <p class="text-sm text-gray-500">Update your security credentials.</p>
+                        </div>
+                        <a href="settings.html#password" class="brand-green font-medium hover:text-green-700 transition">Update</a>
+                    </div>
+
+                    <div class="p-4 border border-red-300 bg-red-50 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-medium text-red-800">Danger Zone: Delete Account</p>
+                                <p class="text-sm text-red-600">Permanently remove your account and all associated data.</p>
+                            </div>
+                            <button id="deleteAccountBtn" class="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition duration-150 shadow-sm">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- DATA ---
+        const countryList = [
+            "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", 
+            "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", 
+            "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", 
+            "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+            "Chile", "China", "Colombia", "Comoros", "Congo (Brazzaville)", "Congo (Kinshasa)", "Costa Rica", "Croatia", 
+            "Cuba", "Cyprus", "Czechia", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", 
+            "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", 
+            "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", 
+            "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", 
+            "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", 
+            "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", 
+            "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", 
+            "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", 
+            "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", 
+            "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", 
+            "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", 
+            "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", 
+            "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", 
+            "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", 
+            "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad and Tobago", 
+            "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", 
+            "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+        ];
+        
+        // --- FUNCTIONS ---
+        
+        /**
+         * Displays a temporary status message (success or error).
+         * @param {string} message - The message to display.
+         * @param {string} type - 'success' or 'error'.
+         */
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.style.display = 'block';
+
+            // Hide the message after 5 seconds
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        /**
+         * Handles the profile form submission.
+         * @param {Event} e 
+         */
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            // Simple validation check
+            if (!data.first_name || !data.last_name || !data.country) {
+                showStatus('Please fill in all required fields (First Name, Last Name, Country).', 'error');
+                return;
+            }
+            
+            console.log("Profile Data to Send:", data);
+            
+            // Simulate API call success
+            showStatus('Profile updated successfully! 🎉', 'success');
+
+            document.getElementById('profileName').textContent = `${data.first_name} ${data.last_name}`;
+            document.getElementById('saveChangesBtn').disabled = false;
+        }
+
+        /**
+         * Handles the Delete Account action with a confirmation.
+         */
+        function handleDeleteAccount() {
+            if (confirm("⚠️ WARNING: Are you absolutely sure you want to permanently delete your account? This action cannot be undone.")) {
+                console.log("Account Deletion Initiated...");
+                showStatus('Your account deletion request has been processed. Redirecting...', 'error');
+                
+                setTimeout(() => {
+                    window.location.href = 'auth_ui.html'; // Redirect to a login/auth page
+                }, 3000); 
+            }
+        }
+
+        /**
+         * Populates the country dropdown.
+         */
+        function populateCountryDropdown() {
+            const selectElement = document.getElementById('country');
+            const defaultCountry = "United States"; // Set a default selection
+            
+            selectElement.innerHTML = '';
+            
+            let defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Select a Country";
+            selectElement.appendChild(defaultOption);
+
+            countryList.forEach(country => {
+                let option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+
+                if (country === defaultCountry) {
+                    option.selected = true;
+                }
+
+                selectElement.appendChild(option);
+            });
+        }
+
+        // --- EVENT LISTENERS (Run on page load) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Populate Country Dropdown
+            populateCountryDropdown();
+
+            // 2. Attach form submission handler
+            document.getElementById('profileForm').addEventListener('submit', handleProfileUpdate);
+
+            // 3. Attach Delete Account handler
+            document.getElementById('deleteAccountBtn').addEventListener('click', handleDeleteAccount);
+
+            // 4. Placeholder for Change Photo button
+            document.getElementById('changePhotoBtn').addEventListener('click', () => {
+                alert('File upload dialog would open here to change the profile picture.');
+            });
+
+            // 5. Update last login time dynamically
+            document.getElementById('lastLogin').textContent = new Date().toLocaleString();
+        });
+    </script>
+</body>
+</html>
