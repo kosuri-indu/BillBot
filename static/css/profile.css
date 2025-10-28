@@ -1,0 +1,72 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+body {
+	font-family: 'Inter', sans-serif;
+	background-color: #F7FAFC;
+}
+
+.sidebar {
+	width: 256px;
+}
+
+.main-content {
+	margin-left: 256px;
+	min-height: 100vh;
+	padding: 2rem;
+}
+
+.nav-active-link {
+	background-color: #4a5568;
+	font-weight: 700;
+	border-right: 4px solid #38A169;
+	color: white;
+}
+
+.card {
+	background-color: white;
+	border-radius: 0.75rem;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -2px rgba(0, 0, 0, 0.06);
+}
+
+.brand-green {
+	color: #38A169;
+}
+
+.brand-bg {
+	background-color: #38A169;
+}
+
+.brand-hover:hover {
+	background-color: #2f855a;
+}
+
+.focus-ring-green:focus {
+	--tw-ring-color: #38A169 !important;
+	border-color: #38A169 !important;
+}
+
+.bg-brand-light-green {
+	background-color: rgba(56, 161, 105, 0.1);
+}
+
+.status-message {
+	padding: 1rem;
+	border-radius: 0.5rem;
+	margin-bottom: 1.5rem;
+	font-weight: 500;
+	display: none;
+}
+
+.status-success {
+	background-color: #d1e7dd;
+	color: #0f5132;
+	border: 1px solid #badbcc;
+}
+
+.status-error {
+	background-color: #f8d7da;
+	color: #842029;
+	border: 1px solid #f5c2c7;
+}

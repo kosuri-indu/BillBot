@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillBot - Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+</head>
+<body>
+    {% include 'sidebar.html' %}
+
+    <main class="main-content-area">
+        
+        <header class="flex justify-between items-center mb-8 pb-4 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Settings</h1>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1">
+                <nav class="settings-card p-4 space-y-1 sticky top-6">
+                    <a href="#general" class="block p-3 font-medium text-gray-800 bg-gray-50 rounded-lg hover:bg-gray-100 transition">General</a>
+                    <a href="#notifications" class="block p-3 font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition">Notifications</a>
+                    <a href="#data-privacy" class="block p-3 font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition">Data & Privacy</a>
+                </nav>
+                <div class="settings-card p-4 mt-6">
+                    <p class="text-sm text-gray-500">Need help?</p>
+                    <a href="#" class="billbot-green font-medium text-sm hover:text-green-700 transition">Visit our Support Center &rarr;</a>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div id="general" class="settings-card p-8">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 border-b pb-4">General Settings</h2>
+                    
+                    <form class="space-y-6">
+                        <div>
+                            <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">Default Currency</label>
+                            <select id="currency" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-ring-green focus:border-[#38A169]">
+                                <option value="USD">USD - U.S. Dollar</option>
+                                <option value="INR" selected>INR - Indian Rupee (₹)</option>
+                                <option value="EUR">EUR - Euro (€)</option>
+                                <option value="GBP">GBP - British Pound (£)</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">This affects all reporting and transaction entries.</p>
+                        </div>
+
+                        <div>
+                            <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
+                            <select id="timezone" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus-ring-green focus:border-[#38A169]">
+                                <option value="IST" selected>Asia/Kolkata (IST)</option>
+                                <option value="EST">Eastern Time (EST/EDT)</option>
+                                <option value="PST">Pacific Time (PST/PDT)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" class="px-6 py-2 text-sm font-semibold billbot-green-bg text-white rounded-lg hover:bg-green-700 transition">
+                                Save General Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="notifications" class="settings-card p-8">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 border-b pb-4">Notification Preferences</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-800">Email Alerts for Bills Due</p>
+                                <p class="text-sm text-gray-500">Get reminders 3 days before a bill's due date.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#38A169]"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                            <div>
+                                <p class="font-medium text-gray-800">Monthly Spending Summary</p>
+                                <p class="text-sm text-gray-500">Receive an email with your financial summary on the 1st of every month.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#38A169]"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between py-2">
+                            <div>
+                                <p class="font-medium text-gray-800">Promotional & Feature Emails</p>
+                                <p class="text-sm text-gray-500">Receive updates on new features and BillBot promotions.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#38A169]"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="data-privacy" class="settings-card p-8">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 border-b pb-4">Data & Privacy</h2>
+
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">Export All Data</p>
+                                <p class="text-sm text-gray-500">Download a full backup of all your transaction and bill history as a **CSV** file.</p>
+                            </div>
+                            <button class="px-4 py-2 text-sm font-medium billbot-green border border-[#38A169] rounded-lg hover:bg-green-50 transition">
+                                <a href="/export-data" class="no-underline text-[#38A169]">Export</a>
+                            </button>
+                        </div>
+
+                        <div class="flex justify-between items-center p-3 border border-red-300 rounded-lg bg-red-50">
+                            <div>
+                                <p class="font-medium text-red-800">Delete Account</p>
+                                <p class="text-sm text-red-600">Permanently delete your account and all associated data. **This action is irreversible.**</p>
+                            </div>
+                            <button class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition" onclick="confirmDelete()">
+                                Delete
+                            </button>
+
+                            <div id="deleteConfirm" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <p class="text-red-800 font-medium mb-2">Are you sure you want to delete your account?</p>
+                                <p class="text-red-600 text-sm mb-4">This will permanently delete your account and all associated bills. This action cannot be undone.</p>
+                                <div class="flex space-x-2">
+                                    <form method="post" action="/delete-account" class="inline">
+                                        <button type="submit" class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Yes, Delete My Account</button>
+                                    </form>
+                                    <button onclick="cancelDelete()" class="px-4 py-2 text-sm font-medium bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function confirmDelete() {
+            document.getElementById('deleteConfirm').classList.remove('hidden');
+        }
+
+        function cancelDelete() {
+            document.getElementById('deleteConfirm').classList.add('hidden');
+        }
+    </script>
+
+</body>
+</html>

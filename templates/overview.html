@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillBot - Overview Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/overview.css') }}">
+</head>
+<body>
+    {% include 'sidebar.html' %}
+    <main class="main-content p-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Financial Overview</h1>
+        <p class="text-gray-600 mb-8">Welcome to your BillBot dashboard. Get a quick glance at your financial health.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="card p-6">
+                <h2 class="text-lg font-semibold text-gray-500 mb-2">Bills Due This Month</h2>
+                <p class="text-4xl font-extrabold text-[#38A169]">$1,250.00</p>
+                <a href="/bills" class="text-sm text-blue-500 hover:text-blue-700 mt-2 block">View Details &rarr;</a>
+            </div>
+        </div>
+        <div class="card mt-8 p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Monthly Spending Chart (Placeholder)</h2>
+            <div class="h-64 bg-gray-100 flex items-center justify-center text-gray-500 rounded-lg border-dashed border-2">Chart integration would go here.</div>
+        </div>
+    </main>
+</body>
+</html>
