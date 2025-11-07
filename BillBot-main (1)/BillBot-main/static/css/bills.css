@@ -1,0 +1,27 @@
+/* Bills page specific tweaks */
+.main-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.bills-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+.bills-table th,
+.bills-table td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #eef1f4;
+}
+.bills-table thead th {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}

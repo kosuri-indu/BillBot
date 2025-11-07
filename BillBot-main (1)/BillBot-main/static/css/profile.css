@@ -1,0 +1,11 @@
+/* Profile page specific tweaks */
+.profile-card {
+  max-width: 560px;
+}
+.profile-card p {
+  margin: 8px 0;
+  color: var(--muted);
+}
+.profile-card button {
+  margin-top: 10px;
+}

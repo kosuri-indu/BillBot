@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillBot - Overview Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom utility class for the prominent red due amount */
+      .text-due-red {
+        color: #e53935; /* A standard red tone */
+      }
+    </style>
+  </head>
+  <body class="flex font-sans bg-gray-50">
+    <aside
+      class="fixed left-0 top-0 h-full w-64 bg-[#0B192C] text-white flex flex-col justify-between"
+    >
+      <div>
+        <div class="p-6 text-2xl font-bold tracking-wide">BillBot</div>
+        <nav class="mt-6 space-y-1">
+          <a
+            href="/overview"
+            id="nav-overview"
+            class="block px-6 py-3 bg-[#11998E] text-white rounded-l-full font-semibold"
+            >Overview</a
+          >
+          <a
+            href="/bills"
+            id="nav-bills"
+            class="block px-6 py-3 text-gray-300 hover:bg-[#10243E] hover:text-white transition"
+            >Bills</a
+          >
+          <a
+            href="/profile"
+            id="nav-profile"
+            class="block px-6 py-3 text-gray-300 hover:bg-[#10243E] hover:text-white transition"
+            >Profile</a
+          >
+          <a
+            href="/settings"
+            class="block px-6 py-3 text-gray-300 hover:bg-[#10243E] hover:text-white transition"
+            >Settings</a
+          >
+        </nav>
+      </div>
+      <div class="p-6">
+        <a
+          href="/logout"
+          class="block text-center px-4 py-2 border border-white rounded hover:bg-white hover:text-[#0B192C] transition"
+          >Logout</a
+        >
+      </div>
+    </aside>
+
+    <main class="ml-64 flex-1 p-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-6">Financial Overview</h1>
+
+      <p class="text-gray-600 mb-8">
+        Welcome to your BillBot dashboard. Get a quick glance at your financial
+        health.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white shadow-lg rounded-xl p-6">
+          <h2 class="text-lg font-semibold text-gray-500 mb-4">
+            Bills Due Next 30 Days
+          </h2>
+
+          <div id="dues-active-view" class="hidden">
+            <p class="text-4xl font-extrabold text-due-red mb-1">
+              ₹<span id="total-due-amount">0.00</span>
+            </p>
+            <p class="text-sm font-medium text-gray-500 mb-4">
+              Next Due: <span id="next-due-date">---</span>
+            </p>
+            
+            <p id="next-due-note" class="text-md font-semibold text-red-700 mt-2 mb-3 border-t pt-3"></p>
+
+            <ul
+              id="bill-category-list"
+              class="space-y-1 text-sm text-gray-700"
+            ></ul>
+          </div>
+
+          <div id="dues-empty-view">
+            <p class="text-xl font-extrabold text-green-600 py-3">
+              enter your first bill to show dues.
+            </p>
+          </div>
+
+          <a
+            href="/bills"
+            class="text-sm text-blue-500 hover:text-blue-700 mt-4 block font-semibold"
+            >View Details &rarr;</a
+          >
+        </div>
+      </div>
+      <div class="bg-white shadow-md rounded-lg mt-8 p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+          Monthly Spending Chart (Placeholder)
+        </h2>
+        <div
+          class="h-64 bg-gray-100 flex items-center justify-center text-gray-500 rounded-lg border-dashed border-2"
+        >
+          Chart integration would go here.
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // *** IMPORTANT: Set this to your actual backend API endpoint ***
+      const API_ENDPOINT = '/api/v1/bills/due';
+      
+      // Function to calculate days difference
+      function daysUntil(dateString) {
+          const date = new Date(dateString);
+          const today = new Date();
+          // Normalize dates to midnight for accurate calculation
+          date.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
+          const diffTime = date.getTime() - today.getTime();
+          // Convert milliseconds to days
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+      }
+
+      // Function to fetch the latest bills data
+      async function fetchBillsData() {
+        
+        // 1. DUES DATA LOGIC (Relies purely on the API)
+        let bills = [];
+        try {
+          const response = await fetch(API_ENDPOINT);
+
+          if (!response.ok) {
+            console.warn(`Dues API returned status ${response.status}. Displaying empty state.`);
+            updateDueBillOverview([]);
+            return;
+          }
+          
+          bills = await response.json();
+          updateDueBillOverview(bills);
+
+        } catch (error) {
+          console.error("Could not fetch due bill data from API:", error);
+          updateDueBillOverview([]); 
+        }
+      }
+
+      // Function to update the DUE bills card (The fixed, dynamic logic is here)
+      function updateDueBillOverview(bills) {
+        // 1. Select Elements
+        const activeView = document.getElementById('dues-active-view');
+        const emptyView = document.getElementById('dues-empty-view');
+        const totalAmountEl = document.getElementById('total-due-amount');
+        const nextDateEl = document.getElementById('next-due-date');
+        const categoryListEl = document.getElementById('bill-category-list');
+        const nextDueNoteEl = document.getElementById('next-due-note');
+
+        // --- FILTERING LOGIC: NEXT 30 DAYS ---
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+        const thirtyDaysFromNow = new Date(today);
+        thirtyDaysFromNow.setDate(today.getDate() + 30);
+        
+        const billsDueSoon = bills.filter(bill => {
+            // CRITICAL FIX 1: Handle flexible API date field name
+            const dateField = bill.dueDate || bill.next_due; 
+            
+            if (!dateField) return false; 
+
+            const billDate = new Date(dateField);
+            if (isNaN(billDate.getTime())) return false;
+
+            // CRITICAL FIX 2: Normalize date to midnight (00:00:00)
+            billDate.setHours(0, 0, 0, 0); 
+            
+            // CRITICAL FIX 3: Comparison logic (>= today)
+            return billDate >= today && billDate <= thirtyDaysFromNow && bill.amount > 0;
+        });
+        // --- END FILTERING LOGIC ---
+
+        // 2. Determine State
+        const hasDues = billsDueSoon.length > 0;
+        
+        if (hasDues) {
+          // --- STATE: DUES EXIST ---
+          activeView.classList.remove('hidden');
+          emptyView.classList.add('hidden');
+
+          // Calculate Totals and sort
+          const totalDue = billsDueSoon.reduce((sum, bill) => sum + bill.amount, 0);
+          const sortedBills = billsDueSoon.sort((a, b) => new Date(a.dueDate || a.next_due) - new Date(b.dueDate || b.next_due));
+          
+          const nearestBill = sortedBills[0];
+          const nearestDueDate = nearestBill.dueDate || nearestBill.next_due;
+          const nextDueDateFormatted = new Date(nearestDueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          
+          const daysAway = daysUntil(nearestDueDate);
+          let noteText = '';
+
+          if (daysAway === 0) {
+              noteText = `⚠️ ${nearestBill.name} of ₹${nearestBill.amount.toFixed(2)} is due TODAY!`;
+          } else if (daysAway === 1) {
+              noteText = `⏰ ${nearestBill.name} of ₹${nearestBill.amount.toFixed(2)} is due TOMORROW!`;
+          } else {
+              noteText = `The closest bill is ${nearestBill.name} (₹${nearestBill.amount.toFixed(2)}), due in ${daysAway} days.`;
+          }
+          
+          // Generate DYNAMIC BREAKDOWN HTML
+          let categoriesHtml = '';
+          sortedBills.forEach(bill => {
+            categoriesHtml += `<li class="flex justify-between py-1"><span>${bill.name}</span> <span class="font-semibold">₹${bill.amount.toFixed(2)}</span></li>`;
+          });
+
+          // 3. Update the DOM
+          totalAmountEl.textContent = totalDue.toFixed(2);
+          nextDateEl.textContent = nextDueDateFormatted;
+          nextDueNoteEl.innerHTML = noteText;
+          categoryListEl.innerHTML = categoriesHtml;
+
+        } else {
+          // --- STATE: NO DUES ---
+          activeView.classList.add('hidden');
+          emptyView.classList.remove('hidden');
+        }
+      }
+
+      // Run the initial data fetch when the page loads
+      document.addEventListener('DOMContentLoaded', fetchBillsData);
+    </script>
+  </body>
+</html>

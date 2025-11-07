@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BillBot - Bills Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="flex bg-gray-50 text-gray-800">
+    <aside
+      class="fixed left-0 top-0 h-full w-64 bg-[#0B192C] text-white flex flex-col justify-between"
+    >
+      <div>
+        <div class="p-6 text-2xl font-bold tracking-wide">BillBot</div>
+        <nav class="mt-6 space-y-1">
+          <a
+            href="/overview"
+            class="block px-6 py-3 text-gray-300 hover:bg-[#10243E] hover:text-white transition"
+            >Overview</a
+          >
+          <a
+            href="/bills"
+            class="block px-6 py-3 bg-[#11998E] text-white rounded-l-full font-semibold"
+            >Bills</a
+          >
+          <a
+            href="/profile"
+            class="block px-6 py-3 text-gray-300 hover:bg-[#10243E] hover:text-white transition"
+            >Profile</a
+          >
+          <a
+            href="/settings"
+            class="block px-6 py-3 text-gray-300 hover:bg-[#10243E] hover:text-white transition"
+            >Settings</a
+          >
+        </nav>
+      </div>
+      <div class="p-6">
+        <a
+          href="/logout"
+          class="block text-center px-4 py-2 border border-white rounded hover:bg-white hover:text-[#0B192C] transition"
+          >Logout</a
+        >
+      </div>
+    </aside>
+
+    <main class="ml-64 flex-1 p-8 overflow-y-auto">
+      <h1 class="text-3xl font-bold text-gray-900 mb-6">Bills Management</h1>
+      <p class="text-gray-600 mb-8">
+        View and track all your upcoming and past bill payments.
+      </p>
+
+      <div
+        id="statusMessage"
+        class="hidden p-3 mb-4 rounded-lg font-medium"
+      ></div>
+
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-gray-800">
+            Upcoming Bills Summary
+          </h2>
+          <button
+            id="toggleAdd"
+            class="px-3 py-1 bg-[#38A169] text-white rounded transition hover:bg-green-700"
+          >
+            + Add Bill
+          </button>
+        </div>
+
+        <form
+          id="addBillForm"
+          class="space-y-4 mb-6 hidden"
+          method="post"
+          action="/bills/create"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Amount</label
+              >
+              <input
+                name="amount"
+                required
+                type="number"
+                step="0.01"
+                class="w-full p-2 border rounded"
+              />
+            </div>
+
+            <div>
+              <label
+                for="addTag"
+                class="block text-sm font-medium text-gray-700"
+                >Tag</label
+              >
+              <select
+                name="tag"
+                id="addTag"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none bg-white"
+              >
+                <option value="" disabled selected>Select a category</option>
+
+                <option value="rent">Rent</option>
+                <option value="mortgage">Mortgage</option>
+                <option value="property_tax">Property Tax</option>
+                <option value="electricity">Electricity</option>
+                <option value="gas">Gas/Heating</option>
+                <option value="water">Water/Sewage</option>
+                <option value="internet">Internet</option>
+                <option value="phone">Mobile Phone</option>
+                <option value="trash">Trash/Recycling</option>
+                <option value="groceries">Groceries</option>
+                <option value="dining">Dining Out</option>
+                <option value="car_payment">Car Payment</option>
+                <option value="gas_fuel">Gas/Fuel</option>
+                <option value="insurance_auto">Auto Insurance</option>
+                <option value="maintenance">Car Maintenance</option>
+                <option value="parking">Parking/Tolls</option>
+                <option value="insurance_health">Health Insurance</option>
+                <option value="medical">Medical/Dental</option>
+                <option value="gym">Gym/Fitness</option>
+                <option value="subscriptions">Subscriptions</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="education">Education/Tuition</option>
+                <option value="debt_loan">Debt/Loan Repayment</option>
+                <option value="credit_card">Credit Card Payment</option>
+                <option value="personal_care">Personal Care</option>
+                <option value="clothing">Clothing</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Payment Mode</label
+              >
+              <input name="payment_mode" class="w-full p-2 border rounded" />
+            </div>
+
+            <div id="addOtherTagInput" class="hidden">
+              <label
+                for="addOtherTag"
+                class="block text-sm font-medium text-gray-700"
+                >Specify Other Category</label
+              >
+              <input
+                name="other_tag"
+                id="addOtherTag"
+                class="w-full p-2 border rounded"
+                placeholder="e.g., Pet Care, Hobby Supplies"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Period</label
+              >
+              <select name="period" class="w-full p-2 border rounded">
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+                <option value="one-time">One-time</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >First Payment Date</label
+              >
+              <input
+                name="first_payment_date"
+                type="date"
+                class="w-full p-2 border rounded"
+              />
+            </div>
+          </div>
+
+          <div class="flex items-end space-x-2 pt-2">
+            <div class="flex-grow">
+              <label class="block text-sm font-medium text-gray-700"
+                >Note</label
+              >
+              <input
+                name="description"
+                class="w-full p-2 border rounded"
+                placeholder="Optional notes or description about the bill"
+              />
+            </div>
+
+            <button
+              type="submit"
+              class="px-4 py-2 bg-[#38A169] text-white rounded h-[42px] min-w-[150px] transition hover:bg-green-700"
+            >
+              Create
+            </button>
+          </div>
+
+          <script>
+            document.addEventListener("DOMContentLoaded", () => {
+              const tagSelect = document.getElementById("addTag");
+              const otherInputDiv = document.getElementById("addOtherTagInput");
+              const otherInput = document.getElementById("addOtherTag");
+
+              const toggleOtherInput = () => {
+                if (tagSelect.value === "other") {
+                  otherInputDiv.classList.remove("hidden");
+                  otherInput.required = true;
+                } else {
+                  otherInputDiv.classList.add("hidden");
+                  otherInput.required = false;
+                  otherInput.value = "";
+                }
+              };
+
+              toggleOtherInput();
+              tagSelect.addEventListener("change", toggleOtherInput);
+            });
+          </script>
+        </form>
+
+        <form
+          id="editBillForm"
+          class="space-y-4 mb-6 hidden bg-yellow-50 p-4 rounded-lg border border-yellow-200"
+          method="post"
+          action=""
+        >
+          <h4 class="font-semibold text-gray-800">Edit Bill</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Description</label
+              >
+              <input
+                name="description"
+                id="editDescription"
+                class="w-full p-2 border rounded"
+              />
+            </div>
+
+            <div>
+              <label
+                for="editTag"
+                class="block text-sm font-medium text-gray-700"
+                >Tag</label
+              >
+              <select
+                name="tag"
+                id="editTag"
+                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none bg-white"
+              >
+                <option value="" disabled selected>Select a category</option>
+                <option value="rent">Rent</option>
+                <option value="mortgage">Mortgage</option>
+                <option value="property_tax">Property Tax</option>
+                <option value="electricity">Electricity</option>
+                <option value="gas">Gas/Heating</option>
+                <option value="water">Water/Sewage</option>
+                <option value="internet">Internet</option>
+                <option value="phone">Mobile Phone</option>
+                <option value="trash">Trash/Recycling</option>
+                <option value="groceries">Groceries</option>
+                <option value="dining">Dining Out</option>
+                <option value="car_payment">Car Payment</option>
+                <option value="gas_fuel">Gas/Fuel</option>
+                <option value="insurance_auto">Auto Insurance</option>
+                <option value="maintenance">Car Maintenance</option>
+                <option value="parking">Parking/Tolls</option>
+                <option value="insurance_health">Health Insurance</option>
+                <option value="medical">Medical/Dental</option>
+                <option value="gym">Gym/Fitness</option>
+                <option value="subscriptions">Subscriptions</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="education">Education/Tuition</option>
+                <option value="debt_loan">Debt/Loan Repayment</option>
+                <option value="credit_card">Credit Card Payment</option>
+                <option value="personal_care">Personal Care</option>
+                <option value="clothing">Clothing</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div id="editOtherTagInput" class="hidden">
+              <label
+                for="editOtherTag"
+                class="block text-sm font-medium text-gray-700"
+                >Specify Other Category</label
+              >
+              <input
+                name="other_tag"
+                id="editOtherTag"
+                class="w-full p-2 border rounded"
+                placeholder="e.g., Pet Care, Hobby Supplies"
+              />
+            </div>
+
+            <script>
+              document.addEventListener("DOMContentLoaded", () => {
+                const tagSelect = document.getElementById("editTag");
+                const otherInputDiv =
+                  document.getElementById("editOtherTagInput");
+                const otherInput = document.getElementById("editOtherTag");
+
+                const toggleOtherInput = () => {
+                  if (tagSelect.value === "other") {
+                    otherInputDiv.classList.remove("hidden");
+                    otherInput.required = true;
+                  } else {
+                    otherInputDiv.classList.add("hidden");
+                    otherInput.required = false;
+                    otherInput.value = "";
+                  }
+                };
+
+                // Set initial state on load (will be overridden by edit button click)
+                toggleOtherInput();
+                tagSelect.addEventListener("change", toggleOtherInput);
+              });
+            </script>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Amount</label
+              >
+              <input
+                name="amount"
+                id="editAmount"
+                required
+                type="number"
+                step="0.01"
+                class="w-full p-2 border rounded"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Payment Mode</label
+              >
+              <input
+                name="payment_mode"
+                id="editPaymentMode"
+                class="w-full p-2 border rounded"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Period</label
+              >
+              <select
+                name="period"
+                id="editPeriod"
+                class="w-full p-2 border rounded"
+              >
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+                <option value="one-time">One-time</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >First Payment Date</label
+              >
+              <input
+                name="first_payment_date"
+                id="editFirstPaymentDate"
+                type="date"
+                class="w-full p-2 border rounded"
+              />
+            </div>
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button
+              type="button"
+              id="cancelEdit"
+              class="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+            >
+              Update
+            </button>
+          </div>
+        </form>
+
+        <ul id="billList" class="space-y-4">
+          {% for bill in bills %}
+          <li
+            data-bill-id="{{ bill.id }}"
+            class="bill-item p-4 border rounded-lg bg-gray-50 shadow-sm"
+          >
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="text-sm text-gray-500 font-medium">
+                  {{ bill.description or 'No description' }}
+                </div>
+                <div class="text-xs text-gray-400 mt-1">
+                  <span class="inline-block bg-gray-100 px-2 py-1 rounded mr-2"
+                    >{{ bill.tag or 'No category' }}</span
+                  >
+                  <span class="inline-block bg-blue-100 px-2 py-1 rounded mr-2"
+                    >{{ bill.payment_mode or '—' }}</span
+                  >
+                  <span class="inline-block bg-green-100 px-2 py-1 rounded"
+                    >{{ bill.period or '—' }}</span
+                  >
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-red-500 font-bold text-xl">
+                  ₹{{ '%.2f' % (bill.amount_cents / 100) }}
+                </div>
+                <div class="text-sm text-gray-500">
+                  {% if bill.next_due %} Due: {{ bill.next_due.strftime('%b %d,
+                  %Y') }} {% else %} No due date {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 mt-4">
+              <button
+                data-bill-id="{{ bill.id }}"
+                data-bill-name="{{ bill.name }}"
+                data-bill-description="{{ bill.description or '' }}"
+                data-bill-tag="{{ bill.tag or '' }}"
+                data-bill-payment-mode="{{ bill.payment_mode or '' }}"
+                data-bill-amount="{{ '%.2f' % (bill.amount_cents / 100) }}"
+                data-bill-period="{{ bill.period or '' }}"
+                data-bill-first-payment-date="{{ bill.last_paid.strftime('%Y-%m-%d') if bill.last_paid else '' }}"
+                data-bill-other-tag="{{ bill.other_tag or '' }}"
+                class="edit-bill-btn px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              >
+                Edit
+              </button>
+
+              <form
+                method="post"
+                action="/bills/{{ bill.id }}/delete"
+                class="delete-bill-form"
+              >
+                <button
+                  type="submit"
+                  class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition"
+                >
+                  Delete
+                </button>
+              </form>
+            </div>
+          </li>
+          {% else %}
+          <li class="p-4 text-gray-500 text-center bg-gray-50 rounded-lg">
+            No bills yet. Add one using the + button above.
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </main>
+
+    <script>
+      const statusMessage = document.getElementById("statusMessage");
+
+      // Utility function to display a status message
+      function showStatus(message, type = "success") {
+        statusMessage.textContent = message;
+        statusMessage.classList.remove(
+          "hidden",
+          "bg-green-100",
+          "text-green-800",
+          "bg-red-100",
+          "text-red-800"
+        );
+        if (type === "success") {
+          statusMessage.classList.add("bg-green-100", "text-green-800");
+        } else {
+          statusMessage.classList.add("bg-red-100", "text-red-800");
+        }
+        statusMessage.scrollIntoView({ behavior: "smooth" });
+        setTimeout(() => statusMessage.classList.add("hidden"), 5000); // Hide after 5 seconds
+      }
+
+      // 1. Toggle Add Form Visibility
+      document.getElementById("toggleAdd").addEventListener("click", () => {
+        document.getElementById("addBillForm").classList.toggle("hidden");
+        document.getElementById("editBillForm").classList.add("hidden");
+      });
+
+      // 2. Handle Form Submissions (Add, Edit, Delete)
+
+      // Generic function to send data to the backend via Fetch
+      async function submitForm(event, successMessage) {
+        event.preventDefault(); // Stop the default page reload
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        // If Name is removed from the form, ensure the Name data attribute is used for the hidden input if editing
+        if (!formData.has("name") && form.id === "editBillForm") {
+          const billId = form.action.split("/").slice(-2, -1)[0];
+          const nameValue = document.querySelector(
+            `.edit-bill-btn[data-bill-id="${billId}"]`
+          ).dataset.billName;
+          formData.set("name", nameValue); // Re-inserting existing name data for the backend if needed
+        } else if (!formData.has("name") && form.id === "addBillForm") {
+          // For a new bill, use the description as the name if the name field is missing
+          const description = formData.get("description") || "Untitled Bill";
+          formData.set("name", description.substring(0, 50));
+        }
+
+        try {
+          const response = await fetch(form.action, {
+            method: form.method,
+            body: new URLSearchParams(formData), // Use URLSearchParams for simple form data
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          });
+
+          if (response.ok) {
+            showStatus(successMessage, "success");
+
+            setTimeout(() => {
+              window.location.href = "/bills";
+            }, 500);
+          } else {
+            const errorText = await response.text();
+            showStatus(
+              `Error processing bill: ${errorText.substring(0, 100)}...`,
+              "error"
+            );
+          }
+        } catch (error) {
+          showStatus(`Network Error: Could not connect to server.`, "error");
+          console.error("Fetch Error:", error);
+        }
+      }
+
+      // Attach event listeners to Add and Edit forms
+      document
+        .getElementById("addBillForm")
+        .addEventListener("submit", (e) =>
+          submitForm(e, "Bill created successfully! Refreshing bill list...")
+        );
+
+      document
+        .getElementById("editBillForm")
+        .addEventListener("submit", (e) =>
+          submitForm(e, "Bill updated successfully! Refreshing bill list...")
+        );
+
+      // Attach event listeners to Delete forms (must iterate over all of them)
+      document.querySelectorAll(".delete-bill-form").forEach((form) => {
+        form.addEventListener("submit", (e) => {
+          if (
+            confirm(
+              "Are you sure you want to delete this bill? This cannot be undone."
+            )
+          ) {
+            submitForm(e, "Bill deleted successfully! Refreshing bill list...");
+          } else {
+            e.preventDefault();
+          }
+        });
+      });
+
+      // 3. Edit Button Logic
+      document.querySelectorAll(".edit-bill-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const form = document.getElementById("editBillForm");
+
+          // Set form action
+          form.action = `/bills/${btn.dataset.billId}/edit`;
+
+          // Note: The 'name' field is removed from the form, but its value is still stored
+          // in the data attribute and will be used in the submitForm function above
+          // to ensure the backend receives it if required by the update logic.
+
+          document.getElementById("editDescription").value =
+            btn.dataset.billDescription;
+          document.getElementById("editAmount").value = btn.dataset.billAmount;
+          document.getElementById("editTag").value = btn.dataset.billTag;
+          document.getElementById("editPaymentMode").value =
+            btn.dataset.billPaymentMode;
+          document.getElementById("editPeriod").value = btn.dataset.billPeriod;
+          document.getElementById("editFirstPaymentDate").value =
+            btn.dataset.billFirstPaymentDate;
+
+          // Handle other tag visibility and value on edit
+          const otherTagSelect = document.getElementById("editTag");
+          const otherTagInputDiv = document.getElementById("editOtherTagInput");
+          const otherTagInput = document.getElementById("editOtherTag");
+
+          const isOther = otherTagSelect.value === "other";
+          otherTagInputDiv.classList.toggle("hidden", !isOther);
+          otherTagInput.required = isOther;
+          otherTagInput.value = btn.dataset.billOtherTag || "";
+
+          // Show/Hide forms
+          document.getElementById("addBillForm").classList.add("hidden");
+          form.classList.remove("hidden");
+          form.scrollIntoView({ behavior: "smooth" });
+        });
+      });
+
+      document.getElementById("cancelEdit").addEventListener("click", () => {
+        document.getElementById("editBillForm").classList.add("hidden");
+      });
+    </script>
+  </body>
+</html>

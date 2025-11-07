@@ -1,0 +1,81 @@
+/* Custom Colors */
+:root {
+  --sidebar-bg: #0b192c;
+  --link-inactive-color: #a9a9a9; /* Approximation for light gray text */
+  --link-hover-bg: #10243e;
+  --link-active-bg: #11998e;
+  --text-color: #ffffff;
+}
+
+/* Sidebar Container Styles */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 16rem; /* 256px */
+  background-color: var(--sidebar-bg);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Logo (BillBot) Styles */
+.sidebar .logo {
+  padding: 1.5rem; /* 24px */
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* Base Link Styles */
+.sidebar a {
+  display: block;
+  padding: 0.75rem 1.5rem; /* 12px vertical, 24px horizontal */
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+/* Inactive Link Styles */
+.sidebar a:not(.active) {
+  color: var(--link-inactive-color);
+}
+
+/* Inactive Link Hover Styles */
+.sidebar a:not(.active):hover {
+  background-color: var(--link-hover-bg);
+  color: var(--text-color);
+}
+
+/* Active Link Styles */
+.sidebar a.active {
+  background-color: var(--link-active-bg);
+  color: var(--text-color);
+  border-top-left-radius: 9999px;
+  border-bottom-left-radius: 9999px;
+  font-weight: 600;
+}
+
+/* Logout Container and Button Styles */
+.sidebar .logout-container {
+  padding: 1.5rem;
+}
+
+.sidebar .logout-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  color: var(--text-color);
+  background-color: transparent;
+  border: 1px solid var(--text-color);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.sidebar .logout-btn:hover {
+  background-color: var(--text-color);
+  color: var(--sidebar-bg);
+}
