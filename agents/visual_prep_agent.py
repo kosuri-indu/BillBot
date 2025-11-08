@@ -1,77 +1,167 @@
-import json
 from typing import Dict, Any
-from datetime import datetime, timedelta
-try:
-    from models import Bill
-except Exception:
-    Bill = None
+from datetime import datetime
 
-def prepare_monthly_spend_chart(agg: Dict[str, Any]) -> Dict[str, Any]:
-    labels = agg['monthly']['labels']
-    data = agg['monthly']['data']
-    return {'type': 'line', 'data': {'labels': labels, 'datasets': [{'label': 'Total spend', 'data': data, 'borderColor': '#38A169', 'backgroundColor': 'rgba(56,161,105,0.08)', 'fill': True}]}, 'options': {'responsive': True, 'plugins': {'legend': {'display': True}}}}
 
-def prepare_tag_breakdown_chart(agg: Dict[str, Any]) -> Dict[str, Any]:
-    labels = agg['tag_breakdown']['labels']
-    data = agg['tag_breakdown']['data']
-    colors = ['#6366F1', '#10B981', '#FB923C', '#EF4444', '#60A5FA', '#A78BFA', '#F59E0B', '#6EE7B7']
-    return {'type': 'doughnut', 'data': {'labels': labels, 'datasets': [{'data': data, 'backgroundColor': colors[:len(data)]}]}, 'options': {'responsive': True}}
+def _parse_iso(d: str):
+    try:
+        return datetime.fromisoformat(d)
+    except Exception:
+        return None
 
-def prepare_payment_mode_chart(agg: Dict[str, Any]) -> Dict[str, Any]:
-    labels = agg['payment_mode_breakdown']['labels']
-    data = agg['payment_mode_breakdown']['data']
-    return {'type': 'bar', 'data': {'labels': labels, 'datasets': [{'label': 'By payment mode', 'data': data, 'backgroundColor': '#60A5FA'}]}, 'options': {'indexAxis': 'y', 'responsive': True}}
 
-def prepare_created_history_chart(agg: Dict[str, Any]) -> Dict[str, Any]:
-    labels = agg.get('created_history', {}).get('labels', [])
-    data = agg.get('created_history', {}).get('data', [])
-    return {'type': 'bar', 'data': {'labels': labels, 'datasets': [{'label': 'Bills created', 'data': data, 'backgroundColor': '#A78BFA'}]}, 'options': {'responsive': True}}
+def _month_label(dt: datetime):
+    return dt.strftime('%Y-%m')
 
-def prepare_cumulative_spend_chart(agg: Dict[str, Any]) -> Dict[str, Any]:
-    labels = agg['monthly']['labels']
-    data = agg['monthly']['data']
-    cum = []
-    s = 0.0
-    for v in data:
-        s += v
-        cum.append(round(s, 2))
-    return {'type': 'line', 'data': {'labels': labels, 'datasets': [{'label': 'Cumulative spend', 'data': cum, 'borderColor': '#F59E0B', 'backgroundColor': 'rgba(245,158,11,0.08)', 'fill': True}]}, 'options': {'responsive': True, 'plugins': {'legend': {'display': True}}}}
 
 def prepare_all(agg: Dict[str, Any]) -> Dict[str, Any]:
-    return {'monthly_spend': prepare_monthly_spend_chart(agg), 'cumulative_spend': prepare_cumulative_spend_chart(agg), 'tag_breakdown': prepare_tag_breakdown_chart(agg), 'payment_mode': prepare_payment_mode_chart(agg), 'created_history': prepare_created_history_chart(agg), 'raw': agg}
+    """Prepare Chart.js-compatible configs and raw aggregates.
 
-def prepare_and_store(agg: Dict[str, Any], user_id: str, db, AgentResult):
-    payload = prepare_all(agg)
+    Returns a dict with keys matching what `overview.html` expects, e.g.
+    {
+      'monthly_spend': {...Chart.js config...},
+      'cumulative_spend': {...},
+      'tag_breakdown': {...},
+      'payment_mode': {...},
+      'created_history': {...},
+      'upcoming_timeline': [...],
+      'raw': {...}
+    }
+    """
     try:
-        timeline = []
-        if Bill is not None:
-            bills = db.session.query(Bill).filter(Bill.user_id == user_id).order_by(Bill.next_due.asc()).all()
-        else:
-            bills = []
-        now = datetime.utcnow()
-        for b in bills:
-            if not b.next_due:
-                continue
-            try:
-                nd = b.next_due
-                if isinstance(nd, str):
-                    ndt = datetime.fromisoformat(nd)
+        bills = agg.get('bills', []) or []
+        # build monthly buckets by created_at
+        start = _parse_iso(agg.get('start'))
+        end = _parse_iso(agg.get('end'))
+        months = []
+        if start and end:
+            cur = datetime(start.year, start.month, 1)
+            while cur <= end:
+                months.append(_month_label(cur))
+                # increment month
+                if cur.month == 12:
+                    cur = datetime(cur.year + 1, 1, 1)
                 else:
-                    ndt = nd
+                    cur = datetime(cur.year, cur.month + 1, 1)
+
+        monthly_totals = {m: 0.0 for m in months}
+        monthly_counts = {m: 0 for m in months}
+        for b in bills:
+            ca = b.get('created_at')
+            try:
+                dt = datetime.fromisoformat(ca) if ca else None
             except Exception:
-                continue
-            if ndt.date() >= now.date() - timedelta(days=7) and ndt.date() <= now.date() + timedelta(days=90):
-                timeline.append({'id': getattr(b, 'id', None), 'name': getattr(b, 'name', '')[:40], 'due_date': ndt.isoformat(), 'amount': (getattr(b, 'amount_cents', 0) or 0) / 100.0, 'tag': getattr(b, 'tag', None), 'payment_mode': getattr(b, 'payment_mode', None)})
-        timeline = sorted(timeline, key=lambda x: x.get('due_date') or '')
-        payload['upcoming_timeline'] = timeline[:12]
+                dt = None
+            label = _month_label(dt) if dt else None
+            amt = (b.get('amount_cents', 0) or 0) / 100.0
+            if label and label in monthly_totals:
+                monthly_totals[label] += amt
+                monthly_counts[label] += 1
+
+        labels = months
+        data = [monthly_totals.get(m, 0.0) for m in labels]
+        counts = [monthly_counts.get(m, 0) for m in labels]
+
+        # tag breakdown
+        by_tag = agg.get('by_tag_cents', {}) or {}
+        tag_labels = list(by_tag.keys())
+        tag_values = [v / 100.0 for v in by_tag.values()]
+
+        # payment modes breakdown from bills
+        pm_map = {}
+        for b in bills:
+            pm = b.get('payment_mode') or 'other'
+            pm_map.setdefault(pm, 0.0)
+            pm_map[pm] += (b.get('amount_cents', 0) or 0) / 100.0
+        pm_labels = list(pm_map.keys())
+        pm_values = [pm_map[k] for k in pm_labels]
+
+        # upcoming timeline: pick bills with next_due
+        upcoming = []
+        for b in bills:
+            if b.get('next_due'):
+                upcoming.append({
+                    'id': b.get('id'),
+                    'name': b.get('name'),
+                    'due_date': b.get('next_due'),
+                    'amount': (b.get('amount_cents', 0) or 0) / 100.0,
+                    'tag': b.get('tag'),
+                    'payment_mode': b.get('payment_mode')
+                })
+        upcoming = sorted(upcoming, key=lambda x: x.get('due_date') or '')[:12]
+
+        raw = {
+            'monthly': {'labels': labels, 'data': data, 'counts': counts},
+            'by_tag_cents': by_tag,
+            'payment_modes': pm_map,
+            'top_bills': agg.get('top_bills', []),
+            'total_cents': agg.get('total_cents', 0)
+        }
+
+        # Chart.js configs
+        monthly_spend = {
+            'type': 'line',
+            'data': {
+                'labels': labels,
+                'datasets': [{
+                    'label': 'Monthly spend',
+                    'data': data,
+                    'borderColor': '#2563EB',
+                    'backgroundColor': 'rgba(37,99,235,0.08)',
+                    'fill': True,
+                }]
+            },
+            'options': {'responsive': True, 'maintainAspectRatio': False}
+        }
+
+        cumulative = []
+        running = 0.0
+        for v in data:
+            running += v
+            cumulative.append(running)
+        cumulative_spend = {
+            'type': 'line',
+            'data': {
+                'labels': labels,
+                'datasets': [{
+                    'label': 'Cumulative spend',
+                    'data': cumulative,
+                    'borderColor': '#16A34A',
+                    'backgroundColor': 'rgba(22,163,74,0.08)',
+                    'fill': True,
+                }]
+            },
+            'options': {'responsive': True, 'maintainAspectRatio': False}
+        }
+
+        tag_breakdown = {
+            'type': 'doughnut',
+            'data': {'labels': tag_labels, 'datasets': [{'data': tag_values, 'backgroundColor': ['#60A5FA', '#34D399', '#FBBF24', '#F87171', '#A78BFA']}]},
+            'options': {'responsive': True, 'maintainAspectRatio': False}
+        }
+
+        payment_mode = {
+            'type': 'pie',
+            'data': {'labels': pm_labels, 'datasets': [{'data': pm_values}]},
+            'options': {'responsive': True, 'maintainAspectRatio': False}
+        }
+
+        created_history = {
+            'type': 'bar',
+            'data': {
+                'labels': labels,
+                'datasets': [{'label': 'Bills created', 'data': counts, 'backgroundColor': '#C084FC'}]
+            },
+            'options': {'responsive': True, 'maintainAspectRatio': False}
+        }
+
+        return {
+            'monthly_spend': monthly_spend,
+            'cumulative_spend': cumulative_spend,
+            'tag_breakdown': tag_breakdown,
+            'payment_mode': payment_mode,
+            'created_history': created_history,
+            'upcoming_timeline': upcoming,
+            'raw': raw,
+        }
     except Exception:
-        pass
-    try:
-        ar = AgentResult(agent_key='visual_prep_agent_v1', user_id=user_id, payload=json.dumps(payload))
-        db.session.add(ar)
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-    return payload
-if __name__ == '__main__':
-    print('Use prepare_all(agg) to get Chart.js payloads')
+        return {'monthly_spend': None, 'cumulative_spend': None, 'tag_breakdown': None, 'payment_mode': None, 'created_history': None, 'upcoming_timeline': [], 'raw': {}}

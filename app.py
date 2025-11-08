@@ -47,37 +47,18 @@ def _compute_next_due_from(start_date, period, interval_count=1):
             return None
         i += 1
     return cur if cur >= now else None
-from agents import aggregation_agent, visual_prep_agent, narration_agent
-from agents import scheduler as agents_scheduler
+
 load_dotenv()
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret')
 init_db(app)
 
-def _run_agents_background(user_id: str):
-    with app.app_context():
-        try:
-            agg = aggregation_agent.aggregate_user_data(user_id, months=12)
-            try:
-                visual_prep_agent.prepare_and_store(agg, user_id, db, AgentResult)
-            except Exception:
-                pass
-            try:
-                narration = narration_agent.generate_narration(agg, user_id=user_id)
-                ar = AgentResult(agent_key='narration_agent_v1', user_id=user_id, payload=json.dumps(narration))
-                db.session.add(ar)
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-        except Exception:
-            pass
 
 @app.route('/api/overview/trigger-refresh', methods=['POST'])
 def api_overview_trigger_refresh():
     user = get_current_user()
     if not user:
         return (jsonify({'error': 'authentication required'}), 401)
-    Thread(target=_run_agents_background, args=(user.id,)).start()
     return (jsonify({'status': 'accepted'}), 202)
 
 def get_current_user():
@@ -188,10 +169,7 @@ def create_bill():
     db.session.add(bill)
     db.session.commit()
     flash('Bill created.', 'success')
-    try:
-        Thread(target=_run_agents_background, args=(user.id,)).start()
-    except Exception:
-        pass
+   
     return redirect(url_for('bills'))
 
 @app.route('/bills/<bill_id>/edit', methods=['POST'])
@@ -233,10 +211,6 @@ def edit_bill(bill_id):
     bill.due_date = next_due
     db.session.commit()
     flash('Bill updated.', 'success')
-    try:
-        Thread(target=_run_agents_background, args=(user.id,)).start()
-    except Exception:
-        pass
     return redirect(url_for('bills'))
 
 @app.route('/bills/<bill_id>/delete', methods=['POST'])
@@ -251,10 +225,6 @@ def delete_bill(bill_id):
     db.session.delete(bill)
     db.session.commit()
     flash('Bill deleted.', 'success')
-    try:
-        Thread(target=_run_agents_background, args=(user.id,)).start()
-    except Exception:
-        pass
     return redirect(url_for('bills'))
 
 @app.route('/profile')
@@ -340,25 +310,6 @@ def api_overview_data():
             needs_recompute = True
     except Exception:
         pass
-    if needs_recompute or charts is None or narration is None:
-        agg = aggregation_agent.aggregate_user_data(user.id, months=12)
-        try:
-            charts = visual_prep_agent.prepare_and_store(agg, user.id, db, AgentResult)
-        except Exception:
-            try:
-                charts = visual_prep_agent.prepare_all(agg)
-            except Exception:
-                charts = None
-        try:
-            narration = narration_agent.generate_narration(agg, user_id=user.id)
-            try:
-                ar = AgentResult(agent_key='narration_agent_v1', user_id=user.id, payload=json.dumps(narration))
-                db.session.add(ar)
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-        except Exception:
-            narration = narration or {'summary': 'No insights available.', 'bullets': [], 'top_changes': []}
     return jsonify({'charts': charts, 'narration': narration})
 
 @app.route('/delete-account', methods=['POST'])
@@ -430,8 +381,4 @@ if __name__ == '__main__':
             except Exception as e:
                 print('Warning: seed_defaults failed during startup:', e)
     safe_startup()
-    try:
-        agents_scheduler.start(period_minutes=15)
-    except Exception as e:
-        print('Could not start agent scheduler:', e)
     app.run(debug=True, host='127.0.0.1', port=5000)
