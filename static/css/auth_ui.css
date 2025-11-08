@@ -2,45 +2,84 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #2D3748; 
+    background-color: #f7fafc;
+    color: #0f172a;
 }
 
 .main-card {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2),
-        0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    transition: transform 0.3s ease-in-out;
+    box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+    transition: transform 160ms ease-in-out;
+    border-radius: 8px;
 }
 
 .input-field {
-    border-color: #E2E8F0;
-    transition: border-color 0.2s;
+    border: 1px solid #E6E9EE;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    transition: border-color 120ms ease-in-out, box-shadow 120ms ease-in-out;
 }
 
 .input-field:focus {
-    border-color: #38A169; 
-    box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.3);
+    border-color: #10B981;
+    outline: none;
+    box-shadow: 0 6px 20px rgba(16,185,129,0.08);
 }
 
 .btn-primary {
-    background-color: #38A169; 
-    transition: background-color 0.2s, transform 0.1s;
+    background-color: #10B981;
+    color: white;
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .btn-primary:hover {
-    background-color: #2F855A;
+    background-color: #059669;
 }
 
-.btn-primary:active {
-    transform: scale(0.99);
-}
-
-.message-box {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 1000;
+.btn-ghost {
+    background: transparent;
+    color: #0f172a;
 }
 
 .hidden {
     display: none !important;
+}
+
+.center-vert {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-logo {
+    color: #16A34A;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+}
+
+.small-muted {
+    color: #6B7280;
+    font-size: 0.9rem;
+}
+
+.card-heading {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.form-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.notice {
+    padding: 0.5rem 0.75rem;
+    background: #F1F5F9;
+    border-radius: 6px;
+    color: #0F172A;
 }
