@@ -67,6 +67,22 @@ def get_current_user():
         return None
     return User.query.get(user_id)
 
+
+def invalidate_chat_cache_for_user(user_id: str | None):
+    """Delete cached chat AgentResult rows for a given user.
+
+    This removes any AgentResult rows whose agent_key starts with 'chat_agent_v1:' for the user.
+    """
+    if not user_id:
+        return
+    try:
+        # use SQLAlchemy query delete for efficiency
+        AgentResult.query.filter(AgentResult.user_id == user_id, AgentResult.agent_key.like('chat_agent_v1:%')).delete(synchronize_session=False)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return
+
 @app.route('/')
 def index():
     return render_template('auth_ui.html')
@@ -116,6 +132,53 @@ def overview():
     if not user:
         return redirect(url_for('index'))
     return render_template('overview.html')
+
+
+@app.route('/chat')
+def chat():
+    # simple chat page (no DB integration required for now)
+    return render_template('chat.html')
+
+
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    data = request.get_json() or {}
+    message = data.get('message')
+    if not message:
+        return (jsonify({'error': 'message is required'}), 400)
+    try:
+        # delegate to agents.chat_agent which handles context collection and caching
+        from agents.chat_agent import generate_chat_response
+        user = get_current_user()
+        user_id = user.id if user else None
+        out = generate_chat_response(user_id, message, use_cache=True)
+        return jsonify(out)
+    except Exception as e:
+        return (jsonify({'error': str(e)}), 500)
+
+
+@app.route('/api/chat/context')
+def api_chat_context():
+    """Return a small JSON context object for the logged-in user.
+
+    This is used by the chat UI to populate the right-hand context panel.
+    """
+    user = get_current_user()
+    if not user:
+        return jsonify({'user': None, 'bills': [], 'total_amount_cents': 0, 'monthly_estimate_cents': 0, 'num_bills': 0})
+    try:
+        bills = Bill.query.filter_by(user_id=user.id).order_by(Bill.created_at.desc()).limit(50).all()
+        bill_dicts = [b.to_dict() for b in bills]
+        total_cents = sum((b.amount_cents or 0) for b in bills)
+        monthly_estimate = 0
+        for b in bills:
+            if b.period == 'monthly' or b.period is None:
+                monthly_estimate += (b.amount_cents or 0)
+            elif b.period == 'yearly':
+                monthly_estimate += (b.amount_cents or 0) / 12.0
+        return jsonify({'user': {'id': user.id, 'email': user.email}, 'bills': bill_dicts, 'total_amount_cents': int(total_cents), 'monthly_estimate_cents': int(monthly_estimate), 'num_bills': len(bill_dicts)})
+    except Exception as e:
+        return (jsonify({'error': str(e)}), 500)
 
 @app.route('/bills', methods=['GET'])
 def bills():
@@ -169,7 +232,11 @@ def create_bill():
     db.session.add(bill)
     db.session.commit()
     flash('Bill created.', 'success')
-   
+    # Invalidate chat cache for this user so assistant uses fresh data
+    try:
+        invalidate_chat_cache_for_user(user.id)
+    except Exception:
+        pass
     return redirect(url_for('bills'))
 
 @app.route('/bills/<bill_id>/edit', methods=['POST'])
@@ -211,6 +278,11 @@ def edit_bill(bill_id):
     bill.due_date = next_due
     db.session.commit()
     flash('Bill updated.', 'success')
+    # Invalidate chat cache for this user
+    try:
+        invalidate_chat_cache_for_user(user.id)
+    except Exception:
+        pass
     return redirect(url_for('bills'))
 
 @app.route('/bills/<bill_id>/delete', methods=['POST'])
@@ -225,6 +297,11 @@ def delete_bill(bill_id):
     db.session.delete(bill)
     db.session.commit()
     flash('Bill deleted.', 'success')
+    # Invalidate chat cache for this user
+    try:
+        invalidate_chat_cache_for_user(user.id)
+    except Exception:
+        pass
     return redirect(url_for('bills'))
 
 @app.route('/profile')
@@ -317,7 +394,9 @@ def delete_account():
     user = get_current_user()
     if not user:
         return redirect(url_for('index'))
+    # remove bills, agent results and user
     Bill.query.filter_by(user_id=user.id).delete()
+    AgentResult.query.filter_by(user_id=user.id).delete()
     db.session.delete(user)
     db.session.commit()
     session.clear()
